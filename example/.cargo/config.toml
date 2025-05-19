@@ -1,0 +1,11 @@
+[target.armv5te-none-eabi]
+rustflags = [
+  "-C", "panic=abort",
+  "-C", "link-arg=-Texample/arm9.ld"
+]
+
+[target.armv4t-none-eabi]
+rustflags = [
+  "-C", "panic=abort",
+  "-C", "link-arg=-Texample/arm7.ld"
+]

@@ -1,7 +1,6 @@
 [workspace]
 members = [
   "lib",
-  "example-arm7",
-  "example-arm9"
+  "example",
 ]
 resolver = "3"

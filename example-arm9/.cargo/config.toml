@@ -1,7 +1,0 @@
-[build]
-# target = "thumbv5te-none-eabi"
-target = "armv5te-none-eabi"
-rustflags = [
-  "-C", "panic=abort",
-  "-C", "link-arg=-T/home/conando/Programming/nds/nitro-rs/example-arm9/arm9.ld"
-]
