@@ -1,0 +1,11 @@
+[package]
+name = "example-arm7"
+version = "0.0.0"
+edition = "2024"
+
+[[bin]]
+path = "src/main.rs"
+name = "example_arm7"
+
+[dependencies]
+nitro-rs = { path = "../lib" }
