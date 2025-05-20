@@ -6,22 +6,24 @@ MEMORY {
   dtcm       (rw)  : org = 0x027e0000, len = 16k
 }
 
-_dtcm_start = ORIGIN(dtcm);
-_dtcm_end = ORIGIN(dtcm) + LENGTH(dtcm);
-_irq_stack = _dtcm_end - 0x100;
-_swi_stack = _irq_stack - 0x100;
-_sys_stack = _swi_stack - 0x100;
+__dtcm_start = ORIGIN(dtcm);
+__dtcm_end = ORIGIN(dtcm) + LENGTH(dtcm);
+__irq_handler = __dtcm_end - 0x4;
+__irq_check_bits = __irq_handler - 0x4;
+__irq_stack = __irq_check_bits - 0x100;
+__swi_stack = __irq_stack - 0x100;
+__sys_stack = __swi_stack - 0x100;
 
 SECTIONS {
   .text ALIGN(4): { *(.text); *(.text.*) } > main_ram
   .data ALIGN(4) : { *(.data); *(.data.*) } > main_ram
   .rodata ALIGN(4) : { *(.rodata); *(.rodata.*) } > main_ram
   .bss ALIGN(4) : {
-    _bss_start = ABSOLUTE(.);
+    __bss_start = ABSOLUTE(.);
     *(.bss); 
     *(.bss.*);
     . = ALIGN(4);
-    _bss_end = ABSOLUTE(.);
+    __bss_end = ABSOLUTE(.);
   } > main_ram
-  _heap_start = ABSOLUTE(.);
+  __heap_start = ABSOLUTE(.);
 }

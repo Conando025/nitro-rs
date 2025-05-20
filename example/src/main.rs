@@ -16,9 +16,9 @@ fn panic(_info: &PanicInfo) -> ! {
 }
 
 unsafe extern "C" {
-    #[link_name = "_bss_start"]
+    #[link_name = "__bss_start"]
     static BSS_START: u32;
-    #[link_name = "_bss_end"]
+    #[link_name = "__bss_end"]
     static BSS_END: u32;
 }
 
@@ -32,33 +32,46 @@ global_asm!(
     // IRQ mode
     "mov r0, #0x12
     msr cpsr, r0
-    ldr sp, =_irq_stack",
+    ldr sp, =__irq_stack",
     // Supervisor mode
     "mov r0, #0x13
     msr cpsr, r0
-    ldr sp, =_swi_stack",
+    ldr sp, =__swi_stack",
     // System mode
     "mov r0, #0x1f
     msr cpsr, r0
-    ldr sp, =_sys_stack",
+    ldr sp, =__sys_stack",
+    // Set irq
+    "ldr r0, =irq_handler
+    ldr r1, =__irq_handler
+    str r0, [r1]",
     "b _entry_arm9",
 );
 
 #[unsafe(no_mangle)]
 extern "C" fn _entry_arm9() -> ! {
-    init_bss();
+    unsafe {
+        init_bss();
+    }
 
     main9();
 
     loop {}
 }
 
-fn init_bss() {
+unsafe fn init_bss() {
     unsafe {
-        let bss_size: usize = addr_of!(BSS_END).offset_from_unsigned(addr_of!(BSS_START));
-        let bss = core::slice::from_raw_parts_mut(BSS_START as *mut u32, bss_size);
-        for word in bss {
-            *word = 0;
+        let bss_start = addr_of!(BSS_START) as *mut u32;
+        let bss_size = bss_start.offset_from_unsigned(addr_of!(BSS_END));
+        primative_memset(bss_start, bss_size, 0);
+    }
+}
+
+unsafe fn primative_memset(start: *mut u32, len: usize, value: u32) {
+    unsafe {
+        let mem_region = core::slice::from_raw_parts_mut(start, len);
+        for word in mem_region {
+            *word = value;
         }
     }
 }
@@ -77,9 +90,17 @@ fn main9() {
     text.write(addr_of!(BSS_START) as u32);
     text.write(addr_of!(BSS_END) as u32);
     text.write(addr_of!(EXAMPLE) as u32);
+    text.write((irq_handler as *const u32) as u32);
     text.new_line();
     for i in 0..10 {
         text.write(EXAMPLE[i]);
+    }
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn irq_handler() {
+    unsafe {
+        ptr::write_volatile(addr_of!(EXAMPLE) as *mut u32, 1);
     }
 }
 
@@ -91,21 +112,23 @@ global_asm!(
     // IRQ mode
     "mov r0, #0x12
     msr cpsr, r0
-    ldr sp, =_irq_stack",
+    ldr sp, =__irq_stack",
     // Supervisor mode
     "mov r0, #0x13
     msr cpsr, r0
-    ldr sp, =_swi_stack",
+    ldr sp, =__swi_stack",
     // System mode
     "mov r0, #0x1f
     msr cpsr, r0
-    ldr sp, =_sys_stack",
+    ldr sp, =__sys_stack",
     "b _entry_arm7",
 );
 
 #[unsafe(no_mangle)]
 extern "C" fn _entry_arm7() -> ! {
-    init_bss();
+    unsafe {
+        init_bss();
+    }
 
     main7();
 
