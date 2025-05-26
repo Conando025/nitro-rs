@@ -4,7 +4,7 @@
 mod text;
 
 use core::{
-    arch::global_asm,
+    arch::{asm, global_asm},
     panic::PanicInfo,
     ptr::{self, addr_of},
 };
@@ -82,14 +82,18 @@ fn main9() {
         ptr::write_volatile(0x04000000 as *mut u32, 0x0002_0000);
         ptr::write_volatile(0x04000240 as *mut u8, 0x80);
         ptr::write_volatile(0x04000208 as *mut u32, 1);
-        ptr::write_volatile(0x04000210 as *mut u32, 1);
     }
+
+    return;
 
     let mut text = TextDisplay::init();
 
     text.write(addr_of!(BSS_START) as u32);
     text.write(addr_of!(BSS_END) as u32);
     text.write(addr_of!(EXAMPLE) as u32);
+    unsafe {
+        asm!("swi 0x05");
+    }
     text.write((irq_handler as *const u32) as u32);
     text.new_line();
     for i in 0..10 {
@@ -98,7 +102,7 @@ fn main9() {
 }
 
 #[unsafe(no_mangle)]
-extern "C" fn irq_handler() {
+pub extern "C" fn irq_handler() {
     unsafe {
         ptr::write_volatile(addr_of!(EXAMPLE) as *mut u32, 1);
     }
@@ -117,7 +121,7 @@ global_asm!(
     "mov r0, #0x13
     msr cpsr, r0
     ldr sp, =__swi_stack",
-    // System mode
+    // System modeBerechnen Sie die Matrix-Vektor Produkte!
     "mov r0, #0x1f
     msr cpsr, r0
     ldr sp, =__sys_stack",
